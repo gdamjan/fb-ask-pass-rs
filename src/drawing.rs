@@ -1,4 +1,5 @@
 use framebuffer::{Framebuffer, KdMode};
+use passwd;
 use std::fs::File;
 use std::io::{self, Read};
 use std::sync::mpsc::{channel, Sender};
@@ -110,9 +111,18 @@ fn stop() {
     let _ = Framebuffer::set_kd_mode(KdMode::Text).unwrap();
 }
 
+fn draw_pass_validate() {}
+fn draw_pass_type() {}
+fn draw_pass_clear() {}
+fn draw_pass_success() {}
+fn draw_pass_fail() {}
+
 pub enum Msg {
     Start,
     Stop,
+    KeyPressed(passwd::Key),
+    Success,
+    Fail,
 }
 
 pub fn init() -> Result<Sender<Msg>, io::Error> {
@@ -122,6 +132,12 @@ pub fn init() -> Result<Sender<Msg>, io::Error> {
         match rx.recv().unwrap() {
             Msg::Start => start(),
             Msg::Stop => stop(),
+            Msg::KeyPressed(passwd::Key::Enter) => draw_pass_validate(),
+            Msg::KeyPressed(passwd::Key::Char(_)) => draw_pass_type(),
+            Msg::KeyPressed(passwd::Key::Escape) => draw_pass_clear(),
+            Msg::KeyPressed(_) => (),
+            Msg::Success => draw_pass_success(),
+            Msg::Fail => draw_pass_fail(),
         }
     });
 

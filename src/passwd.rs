@@ -30,14 +30,13 @@ SOFTWARE.
 extern crate libc;
 extern crate termios;
 
-use std::os::unix::io::AsRawFd;
-use std::io;
 use std::fs;
+use std::io;
+use std::os::unix::io::AsRawFd;
 use std::str;
 
-
 #[derive(Copy, Clone, PartialEq, Eq, Debug)]
-enum Key {
+pub enum Key {
     Unknown,
     ArrowLeft,
     ArrowRight,
@@ -98,7 +97,10 @@ fn read_single_key(fd: i32) -> io::Result<Key> {
     rv
 }
 
-pub fn read_pass(feedback: &Fn()) -> io::Result<String> {
+pub fn read_pass<F>(feedback: F) -> io::Result<String>
+where
+    F: Fn(Key) -> (),
+{
     let tty_f = fs::File::open("/dev/tty")?;
     let fd = tty_f.as_raw_fd();
 
@@ -109,10 +111,18 @@ pub fn read_pass(feedback: &Fn()) -> io::Result<String> {
 
     let mut pass = String::new();
     let rv = loop {
-        match read_single_key(fd)? {
-            Key::Char(c) => { pass.push(c); feedback(); },
+        let key = read_single_key(fd)?;
+        feedback(key);
+
+        match key {
+            Key::Char(c) => {
+                pass.push(c);
+            }
+            Key::Escape => {
+                pass.clear();
+            }
             Key::Enter => break Ok(pass),
-            _ => ()
+            _ => continue,
         }
     };
 
