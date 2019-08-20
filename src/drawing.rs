@@ -1,5 +1,5 @@
 use framebuffer::{Framebuffer, KdMode};
-use passwd;
+use passwd::Key;
 use std::fs::File;
 use std::io::{self, Read};
 use std::sync::mpsc::{channel, Sender};
@@ -33,12 +33,6 @@ struct Rect {
 //        for i in self.min[0]..self.max[0] {
 //            for j in self.min[1]..self.max[1] {}
 //        }
-//    }
-//}
-
-//impl<'a> Into<&[u8]> for Frame {
-//    fn into(self: 'a Frame) -> &'a [u8] {
-//        self.buffer.as_slice()
 //    }
 //}
 
@@ -120,7 +114,7 @@ fn draw_pass_fail() {}
 pub enum Msg {
     Start,
     Stop,
-    KeyPressed(passwd::Key),
+    KeyPressed(Key),
     Success,
     Fail,
 }
@@ -132,9 +126,9 @@ pub fn init() -> Result<Sender<Msg>, io::Error> {
         match rx.recv().unwrap() {
             Msg::Start => start(),
             Msg::Stop => stop(),
-            Msg::KeyPressed(passwd::Key::Enter) => draw_pass_validate(),
-            Msg::KeyPressed(passwd::Key::Char(_)) => draw_pass_type(),
-            Msg::KeyPressed(passwd::Key::Escape) => draw_pass_clear(),
+            Msg::KeyPressed(Key::Enter) => draw_pass_validate(),
+            Msg::KeyPressed(Key::Char(_)) => draw_pass_type(),
+            Msg::KeyPressed(Key::Escape) => draw_pass_clear(),
             Msg::KeyPressed(_) => (),
             Msg::Success => draw_pass_success(),
             Msg::Fail => draw_pass_fail(),

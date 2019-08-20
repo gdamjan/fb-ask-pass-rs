@@ -31,7 +31,8 @@ extern crate libc;
 extern crate termios;
 
 use std::fs;
-use std::io;
+use std::fs::File;
+use std::io::{self, Write};
 use std::os::unix::io::AsRawFd;
 use std::str;
 
@@ -105,7 +106,7 @@ where
     let fd = tty_f.as_raw_fd();
 
     let mut termios = termios::Termios::from_fd(fd)?;
-    let original = termios.clone();
+    let original = termios; // copy done here
     termios::cfmakeraw(&mut termios);
     termios::tcsetattr(fd, termios::TCSADRAIN, &termios)?;
 
@@ -128,4 +129,21 @@ where
 
     termios::tcsetattr(fd, termios::TCSADRAIN, &original)?;
     rv
+}
+
+pub fn validate_pass(pass: String) -> io::Result<String> {
+    Ok(pass)
+}
+
+pub fn write_pass(write_to: Option<String>, pass: String) {
+    match write_to {
+        None => {
+            // for testing, get back to text mode
+            println!("You entered: {}", pass);
+        }
+        Some(fname) => {
+            let mut f = File::create(fname).unwrap();
+            f.write_all(pass.as_bytes()).unwrap();
+        }
+    }
 }
