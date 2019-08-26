@@ -29,17 +29,22 @@ fn main() -> io::Result<()> {
     let write_to = parse_args(&args).unwrap();
     let send_to_draw = |sink: Sender<Msg>| {
         let tx = sink.clone();
-        move |msg: Msg| tx.send(msg).unwrap()
+        move |msg: Msg| {
+            println!("Sending msg {:?}", msg);
+            tx.send(msg).unwrap()
+        }
     };
     let draw = send_to_draw(drawing::init()?);
-    let draw_key_callback = |k: Key| draw(Msg::KeyPressed(k));
+    let draw_key_callback = |k: Key| {
+        println!("Drawing key {:?}", k);
+        draw(Msg::KeyPressed(k))
+    };
 
     // Start graphical mode
     draw(Msg::Start);
 
     read_pass(draw_key_callback)
         .and_then(validate_pass)
-        .map_err(|_| draw(Msg::Fail))
         .and_then(|pass| {
             draw(Msg::Success);
             write_pass(write_to, pass);
