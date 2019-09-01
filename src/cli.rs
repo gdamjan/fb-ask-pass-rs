@@ -4,7 +4,9 @@ pub struct Config {
 }
 
 pub fn parse_args(args: &[String]) -> Result<Config, &'static str> {
-    let config: Option<Config> = match args.iter().map(String::as_str).collect::<Vec<&str>>()[..] {
+    let str_args: Vec<&str> = args.iter().map(String::as_str).collect();
+
+    let config = match str_args[..] {
         [_, "--image", img, "--write", path] | [_, "--write", path, "--image", img] => {
             Some(Config {
                 image_path: Some(String::from(img)),
