@@ -96,7 +96,7 @@ pub fn read_pass(feedback: &dyn Fn()) -> io::Result<String> {
     let fd = tty_f.as_raw_fd();
 
     let mut termios = termios::Termios::from_fd(fd)?;
-    let original = termios.clone();
+    let original = termios;
     termios::cfmakeraw(&mut termios);
     termios::tcsetattr(fd, termios::TCSADRAIN, &termios)?;
 
