@@ -1,8 +1,10 @@
 extern crate framebuffer;
 
-use framebuffer::Framebuffer;
+use framebuffer::{Framebuffer, KdMode};
 use std::fs::File;
 use std::io::{self, Read};
+use std::sync::mpsc;
+use std::thread;
 
 pub struct Frame {
     buffer: Vec<u8>,
@@ -59,16 +61,45 @@ fn read_u32_from_file(fname: &str) -> io::Result<u32> {
         .map_err(|_| io::Error::new(io::ErrorKind::Other, "can't parse number"))
 }
 
-pub fn draw_image_centered(device: String, image_path: String) {
+fn draw_image_centered(device: String, image_path: String) {
     let mut framebuffer = Framebuffer::new(device).unwrap();
     let frame = Frame::from_image(&framebuffer, &image_path, None, None);
     frame.draw(&mut framebuffer);
 }
 
-pub fn draw_bgrt(device: String) {
+fn draw_bgrt(device: String) {
     let mut framebuffer = Framebuffer::new(device).unwrap();
     let xoffset = read_u32_from_file("/sys/firmware/acpi/bgrt/xoffset").ok();
     let yoffset = read_u32_from_file("/sys/firmware/acpi/bgrt/yoffset").ok();
-    let frame = Frame::from_image(&framebuffer,"/sys/firmware/acpi/bgrt/image", xoffset, yoffset);
+    let frame = Frame::from_image(&framebuffer, "/sys/firmware/acpi/bgrt/image", xoffset, yoffset);
     frame.draw(&mut framebuffer);
+}
+
+pub enum Msg {
+    Start(String, Option<String>),
+    Stop,
+}
+
+fn start(device: String, image_path: Option<String>) {
+    match image_path {
+        None => draw_bgrt(device),
+        Some(image_path) => draw_image_centered(device, image_path),
+    }
+}
+
+fn stop() {
+    Framebuffer::set_kd_mode(KdMode::Text).unwrap();
+}
+
+pub fn init() -> impl Fn(Msg) -> () {
+    let (tx, rx) = mpsc::channel::<Msg>();
+
+    thread::spawn(move || loop {
+        match rx.recv().unwrap() {
+            Msg::Start(device, image_path) => start(device, image_path),
+            Msg::Stop => stop(),
+        }
+    });
+
+    move |m: Msg| tx.send(m).unwrap()
 }
