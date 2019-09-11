@@ -7,9 +7,14 @@ env:
     - PROJECT_NAME=fb-ask-pass
     - TARGET=x86_64-unknown-linux-gnu
 
+before_script:
+  - rustup component add clippy-preview rustfmt
+
 script:
-  - cargo build ${TRAVIS_TAG:+--release} --target $TARGET
-  - cargo test  ${TRAVIS_TAG:+--release} --target $TARGET
+  - cargo fmt --all -- --check
+  - cargo clippy ${TRAVIS_TAG:+--release} --target $TARGET -- -D warnings
+  - cargo build  ${TRAVIS_TAG:+--release} --target $TARGET
+  - cargo test   ${TRAVIS_TAG:+--release} --target $TARGET
 
 before_deploy:
   - strip target/$TARGET/release/$PROJECT_NAME
