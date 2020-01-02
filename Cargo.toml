@@ -12,6 +12,7 @@ framebuffer = "0.1"
 bmp = "0.1"
 libc = "0"
 termios = "0.3"
+rand = "*"
 clap = "2"
 
 [profile.release]

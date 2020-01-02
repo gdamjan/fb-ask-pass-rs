@@ -9,13 +9,13 @@ use std::io::{self, Write};
 
 fn main() -> io::Result<()> {
     let config = cli::get_config().unwrap();
-    let draw = drawing::init();
+    let draw = drawing::init(config.device);
 
     // ``draw_keypress`` is a function that takes a ``Key`` and draws pixels for that key in the
     // frame buffer.
     let draw_keypress = |k: Key| draw(Msg::Keypress(k));
 
-    draw(Msg::Start(config.device, config.image_path));
+    draw(Msg::Start(config.image_path));
 
     let pass = read_pass(draw_keypress)?;
 
